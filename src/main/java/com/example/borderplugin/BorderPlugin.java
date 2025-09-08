@@ -244,6 +244,28 @@ public class BorderPlugin extends JavaPlugin implements Listener {
             }
             return true;
         }
+        if (args[0].equalsIgnoreCase("remove")) {
+            if (!sender.hasPermission("border.admin")) {
+                sender.sendMessage("§cGeen permissie.");
+                return true;
+            }
+            if (args.length < 2) {
+                sender.sendMessage("§cGebruik: /border remove <aantal>");
+                return true;
+            }
+            try {
+                int remove = Integer.parseInt(args[1]);
+                borderSize -= remove;
+                getConfig().set("border.size", borderSize);
+                saveConfig();
+                setWorldBorder();
+                sender.sendMessage("§aBorder verkleind met " + remove + " naar " + borderSize);
+                if (logToFile) logToFile(sender.getName() + " verkleinde border met " + remove);
+            } catch (NumberFormatException e) {
+                sender.sendMessage("§cGeen geldig getal.");
+            }
+            return true;
+        }
         if (args[0].equalsIgnoreCase("center")) {
             if (!sender.hasPermission("border.admin")) {
                 sender.sendMessage("§cGeen permissie.");
@@ -296,6 +318,7 @@ public class BorderPlugin extends JavaPlugin implements Listener {
             sender.sendMessage("§7/border reload - herlaad config");
             sender.sendMessage("§7/border set <grootte> - zet border grootte");
             sender.sendMessage("§7/border add <aantal> - vergroot border");
+            sender.sendMessage("§7/border remove <aantal> - verklein border");
             sender.sendMessage("§7/border center <x> <z> - zet center");
             sender.sendMessage("§7/border center hier - zet center op jouw locatie");
             sender.sendMessage("§7/border info - info over border");
@@ -373,7 +396,7 @@ public class BorderPlugin extends JavaPlugin implements Listener {
         if (!command.getName().equalsIgnoreCase("border")) return java.util.Collections.emptyList();
         java.util.List<String> completions = new java.util.ArrayList<>();
         if (args.length == 1) {
-            java.util.List<String> sub = java.util.Arrays.asList("reload", "set", "add", "center", "info", "help", "bypass", "log");
+            java.util.List<String> sub = java.util.Arrays.asList("reload", "set", "add", "remove", "center", "info", "help", "bypass", "log");
             for (String s : sub) {
                 if (s.startsWith(args[0].toLowerCase())) completions.add(s);
             }
