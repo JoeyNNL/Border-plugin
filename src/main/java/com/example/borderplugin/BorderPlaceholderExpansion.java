@@ -1,3 +1,4 @@
+    // ...existing code...
 package com.example.borderplugin;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
@@ -5,10 +6,20 @@ import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
 public class BorderPlaceholderExpansion extends PlaceholderExpansion {
+    @Override
+    public boolean canRegister() {
+        return true;
+    }
+
+    @Override
+    public boolean persist() {
+        return true;
+    }
     private final BorderPlugin plugin;
 
     public BorderPlaceholderExpansion(BorderPlugin plugin) {
         this.plugin = plugin;
+        register();
     }
 
     @Override

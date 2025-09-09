@@ -9,6 +9,6 @@ softdepend: [PlaceholderAPI]
 commands:
   border:
     description: Border beheer commando
-  usage: /border <reload|set|add|remove|center|info|help|bypass|log>
+    usage: /border <reload|set|add|remove|center|info|help|bypass|log>
     permission: border.admin
     permission-message: Je hebt geen toegang tot dit commando.
