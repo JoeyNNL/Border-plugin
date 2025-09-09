@@ -28,6 +28,7 @@ import java.util.logging.Level;
 
 
 public class BorderPlugin extends JavaPlugin implements Listener {
+    private LocalDate lastGrowDate = null;
     public int getBorderSize() {
         return borderSize;
     }
@@ -108,6 +109,12 @@ public class BorderPlugin extends JavaPlugin implements Listener {
     }
 
     private void growBorder() {
+        LocalDate today = LocalDate.now();
+        if (lastGrowDate != null && lastGrowDate.equals(today)) {
+            getLogger().info("Border is vandaag al vergroot. Sla groei over.");
+            return;
+        }
+        lastGrowDate = today;
         borderSize += growAmount;
         getConfig().set("border.size", borderSize);
         saveConfig();
@@ -117,7 +124,7 @@ public class BorderPlugin extends JavaPlugin implements Listener {
             Bukkit.broadcastMessage(msg);
         }
         if (logToFile) {
-            logToFile("Border vergroot naar " + borderSize + " blokken op " + LocalDate.now() + ".");
+            logToFile("Border vergroot naar " + borderSize + " blokken op " + today + ".");
         }
         getLogger().info("Wereldborder vergroot naar " + borderSize + " blokken.");
     }
