@@ -18,7 +18,7 @@ public class BorderPlaceholderExpansion extends PlaceholderExpansion {
 
     @Override
     public @NotNull String getAuthor() {
-        return "jouwnaam";
+        return "JoeyNNL";
     }
 
     @Override
