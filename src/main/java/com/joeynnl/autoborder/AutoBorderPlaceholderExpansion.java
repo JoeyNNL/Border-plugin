@@ -9,6 +9,17 @@ public class AutoBorderPlaceholderExpansion extends PlaceholderExpansion {
 
     public AutoBorderPlaceholderExpansion(AutoBorderPlugin plugin) {
         this.plugin = plugin;
+        register();
+    }
+
+    @Override
+    public boolean canRegister() {
+        return true;
+    }
+
+    @Override
+    public boolean persist() {
+        return true;
     }
 
     @Override

@@ -27,23 +27,23 @@ border:
   # Log border changes to a file (border.log)
   log_to_file: true
   # The chat message to broadcast (use %size% for the new border size)
-  broadcast_message: "§a[Border] De wereldborder is vergroot naar %size% blokken!"
+  broadcast_message: "<yellow>[</yellow><green>Border</green><yellow>]</yellow> <green>De wereldborder is vergroot naar <red>%size%</red> blokken!</green>"
   # Show a title message to all players when the border grows
   broadcast_title_enabled: true
   # The main title text (use %size% for the new border size)
-  broadcast_title_main: "§aBorder vergroot!"
+  broadcast_title_main: "<green>Border vergroot!</green>"
   # The subtitle text (use %size% for the new border size)
-  broadcast_title_sub: "Nieuwe grootte: %size% blokken"
+  broadcast_title_sub: "<yellow>Nieuwe grootte:</yellow> <red>%size%</red> <yellow>blokken</yellow>"
   # Title fade-in time in ticks (20 ticks = 1 second)
   broadcast_title_fadein: 10
   # Title stay time in ticks
-  broadcast_title_stay: 60
+  broadcast_title_stay: 100
   # Title fade-out time in ticks
   broadcast_title_fadeout: 10
   # Play a sound to all players when the border grows
   sound_enabled: true
   # The Minecraft sound to play (see https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html)
-  sound: "ENTITY_BEACON_ACTIVATE"
+  sound: "BLOCK_BEACON_ACTIVATE"
   # Sound volume (1.0 = normal)
   sound_volume: 1.0
   # Sound pitch (1.0 = normal)
