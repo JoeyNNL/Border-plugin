@@ -1,15 +1,50 @@
+# --- BorderPlugin Configuration ---
+
+# Pre-generate all chunks within the border on server start (recommended for performance)
 pregen_chunks: false
+# How many chunks to pre-generate per server tick
 pregen_chunks_per_tick: 10
-# BorderPlugin configuratie
+
 border:
+  # The current size (diameter) of the world border in blocks
   size: 1000
+  # The X coordinate of the border center
   center_x: 0
+  # The Z coordinate of the border center
   center_z: 0
+  # How many blocks the border grows each time
   grow_amount: 100
+  # At what time (24h format, e.g. 20:00) the border grows
   grow_time: "20:00"
+  # On which days the border grows (use English day names, all caps)
   grow_days: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
+  # Animate the border growth (smooth transition)
   grow_animated: true
+  # Duration of the border growth animation in seconds
   grow_animated_seconds: 10
+  # Send a chat broadcast message when the border grows
   broadcast: true
+  # Log border changes to a file (border.log)
   log_to_file: true
+  # The chat message to broadcast (use %size% for the new border size)
   broadcast_message: "§a[Border] De wereldborder is vergroot naar %size% blokken!"
+  # Show a title message to all players when the border grows
+  broadcast_title_enabled: true
+  # The main title text (use %size% for the new border size)
+  broadcast_title_main: "§aBorder vergroot!"
+  # The subtitle text (use %size% for the new border size)
+  broadcast_title_sub: "Nieuwe grootte: %size% blokken"
+  # Title fade-in time in ticks (20 ticks = 1 second)
+  broadcast_title_fadein: 10
+  # Title stay time in ticks
+  broadcast_title_stay: 60
+  # Title fade-out time in ticks
+  broadcast_title_fadeout: 10
+  # Play a sound to all players when the border grows
+  sound_enabled: true
+  # The Minecraft sound to play (see https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html)
+  sound: "ENTITY_BEACON_ACTIVATE"
+  # Sound volume (1.0 = normal)
+  sound_volume: 1.0
+  # Sound pitch (1.0 = normal)
+  sound_pitch: 1.0

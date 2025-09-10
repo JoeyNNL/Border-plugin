@@ -1,5 +1,4 @@
-
-package com.example.borderplugin;
+package com.joeynnl.autoborder;
 
 import org.bukkit.Bukkit;
 import net.kyori.adventure.text.Component;
@@ -10,7 +9,6 @@ import org.bukkit.World;
 import org.bukkit.WorldBorder;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import java.util.HashSet;
@@ -29,10 +27,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.logging.Level;
 
-
-
-public class BorderPlugin extends JavaPlugin implements Listener {
-    private LocalDate lastGrowDate = null;
+public class AutoBorderPlugin extends JavaPlugin implements Listener {
     public int getBorderSize() {
         return borderSize;
     }
@@ -91,16 +86,16 @@ public class BorderPlugin extends JavaPlugin implements Listener {
         broadcastMessage = config.getString("border.broadcast_message", "§aDe wereldborder is vergroot naar %size% blokken!");
         pregenChunks = config.getBoolean("pregen_chunks", false);
         pregenChunksPerTick = config.getInt("pregen_chunks_per_tick", 10);
-    broadcastTitleEnabled = config.getBoolean("border.broadcast_title_enabled", false);
-    broadcastTitleMain = config.getString("border.broadcast_title_main", "§aBorder vergroot!");
-    broadcastTitleSub = config.getString("border.broadcast_title_sub", "Nieuwe grootte: %size% blokken");
-    broadcastTitleFadeIn = config.getInt("border.broadcast_title_fadein", 10);
-    broadcastTitleStay = config.getInt("border.broadcast_title_stay", 60);
-    broadcastTitleFadeOut = config.getInt("border.broadcast_title_fadeout", 10);
-    soundEnabled = config.getBoolean("border.sound_enabled", false);
-    soundName = config.getString("border.sound", "ENTITY_PLAYER_LEVELUP");
-    soundVolume = (float) config.getDouble("border.sound_volume", 1.0);
-    soundPitch = (float) config.getDouble("border.sound_pitch", 1.0);
+        broadcastTitleEnabled = config.getBoolean("border.broadcast_title_enabled", false);
+        broadcastTitleMain = config.getString("border.broadcast_title_main", "§aBorder vergroot!");
+        broadcastTitleSub = config.getString("border.broadcast_title_sub", "Nieuwe grootte: %size% blokken");
+        broadcastTitleFadeIn = config.getInt("border.broadcast_title_fadein", 10);
+        broadcastTitleStay = config.getInt("border.broadcast_title_stay", 60);
+        broadcastTitleFadeOut = config.getInt("border.broadcast_title_fadeout", 10);
+        soundEnabled = config.getBoolean("border.sound_enabled", false);
+        soundName = config.getString("border.sound", "ENTITY_PLAYER_LEVELUP");
+        soundVolume = (float) config.getDouble("border.sound_volume", 1.0);
+        soundPitch = (float) config.getDouble("border.sound_pitch", 1.0);
     }
 
     private void setWorldBorder() {
@@ -122,7 +117,7 @@ public class BorderPlugin extends JavaPlugin implements Listener {
                 LocalTime target = LocalTime.parse(growTime, DateTimeFormatter.ofPattern("HH:mm"));
                 long delay = java.time.Duration.between(now, target).getSeconds();
                 if (delay < 0) delay += 24 * 60 * 60;
-                Bukkit.getScheduler().runTaskLater(BorderPlugin.this, () -> {
+                Bukkit.getScheduler().runTaskLater(AutoBorderPlugin.this, () -> {
                     DayOfWeek today = LocalDate.now().getDayOfWeek();
                     if (growDays.isEmpty() || growDays.contains(today.toString())) {
                         growBorder();
@@ -133,12 +128,6 @@ public class BorderPlugin extends JavaPlugin implements Listener {
     }
 
     private void growBorder() {
-        LocalDate today = LocalDate.now();
-        if (lastGrowDate != null && lastGrowDate.equals(today)) {
-            getLogger().info("Border is vandaag al vergroot. Sla groei over.");
-            return;
-        }
-        lastGrowDate = today;
         borderSize += growAmount;
         getConfig().set("border.size", borderSize);
         saveConfig();
@@ -177,7 +166,7 @@ public class BorderPlugin extends JavaPlugin implements Listener {
             }
         }
         if (logToFile) {
-            logToFile("Border vergroot naar " + borderSize + " blokken op " + today + ".");
+            logToFile("Border vergroot naar " + borderSize + " blokken op " + LocalDate.now() + ".");
         }
         getLogger().info("Wereldborder vergroot naar " + borderSize + " blokken.");
     }
@@ -405,8 +394,8 @@ public class BorderPlugin extends JavaPlugin implements Listener {
         }
         // PlaceholderAPI support
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            new BorderPlaceholderExpansion(this);
-            getLogger().info("PlaceholderAPI hook geregistreerd: %borderplugin_size% beschikbaar.");
+            new AutoBorderPlaceholderExpansion(this);
+            getLogger().info("PlaceholderAPI hook geregistreerd: %autoborder_size% beschikbaar.");
         }
     }
 
@@ -469,6 +458,4 @@ public class BorderPlugin extends JavaPlugin implements Listener {
         }
         return completions;
     }
-
-
 }
