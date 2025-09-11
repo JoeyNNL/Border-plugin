@@ -18,6 +18,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.DayOfWeek;
@@ -70,6 +71,7 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
     private String soundName;
     private float soundVolume;
     private float soundPitch;
+    private BukkitTask borderGrowTask;
 
     private void reloadSettings() {
         FileConfiguration config = getConfig();
@@ -109,8 +111,16 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
         }
     }
 
+    private void cancelBorderGrowTask() {
+        if (borderGrowTask != null) {
+            borderGrowTask.cancel();
+            borderGrowTask = null;
+        }
+    }
+
     private void scheduleBorderGrowth() {
-        new BukkitRunnable() {
+        cancelBorderGrowTask();
+        borderGrowTask = new BukkitRunnable() {
             @Override
             public void run() {
                 LocalTime now = LocalTime.now();
@@ -246,6 +256,8 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
             reloadConfig();
             reloadSettings();
             setWorldBorder();
+            cancelBorderGrowTask();
+            scheduleBorderGrowth();
             sender.sendMessage("§aBorder config herladen!");
             return true;
         }
@@ -384,6 +396,7 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
         saveDefaultConfig();
         reloadSettings();
         setWorldBorder();
+        cancelBorderGrowTask();
         scheduleBorderGrowth();
         getCommand("border").setExecutor(this);
         getCommand("border").setTabCompleter(this);
@@ -397,6 +410,11 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
             new AutoBorderPlaceholderExpansion(this);
             getLogger().info("PlaceholderAPI hook geregistreerd: %autoborder_size% beschikbaar.");
         }
+    }
+
+    @Override
+    public void onDisable() {
+        cancelBorderGrowTask();
     }
 
     private void pregenAllChunks() {
