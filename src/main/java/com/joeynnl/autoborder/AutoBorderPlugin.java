@@ -120,6 +120,7 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
 
     private void scheduleBorderGrowth() {
         cancelBorderGrowTask();
+        getLogger().info("[DEBUG] scheduleBorderGrowth() aangeroepen op: " + java.time.LocalDateTime.now() + ", growTime=" + growTime);
         borderGrowTask = new BukkitRunnable() {
             @Override
             public void run() {
@@ -127,8 +128,10 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
                 LocalTime target = LocalTime.parse(growTime, DateTimeFormatter.ofPattern("HH:mm"));
                 long delay = java.time.Duration.between(now, target).getSeconds();
                 if (delay < 0) delay += 24 * 60 * 60;
+                getLogger().info("[DEBUG] Scheduler run: now=" + now + ", target=" + target + ", delay=" + delay + "s");
                 Bukkit.getScheduler().runTaskLater(AutoBorderPlugin.this, () -> {
                     DayOfWeek today = LocalDate.now().getDayOfWeek();
+                    getLogger().info("[DEBUG] runTaskLater triggered op: " + java.time.LocalDateTime.now() + ", day=" + today);
                     if (growDays.isEmpty() || growDays.contains(today.toString())) {
                         growBorder();
                     }
@@ -138,6 +141,7 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
     }
 
     private void growBorder() {
+        getLogger().info("[DEBUG] growBorder() aangeroepen op: " + java.time.LocalDateTime.now() + ", borderSize=" + borderSize + ", growAmount=" + growAmount);
         borderSize += growAmount;
         getConfig().set("border.size", borderSize);
         saveConfig();
