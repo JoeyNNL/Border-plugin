@@ -120,24 +120,26 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
 
     private void scheduleBorderGrowth() {
         cancelBorderGrowTask();
-        getLogger().info("[DEBUG] scheduleBorderGrowth() aangeroepen op: " + java.time.LocalDateTime.now() + ", growTime=" + growTime);
+        getLogger().info("[DEBUG] scheduleBorderGrowth() called at: " + java.time.LocalDateTime.now() + ", growTime=" + growTime);
+        LocalTime now = LocalTime.now();
+        LocalTime target = LocalTime.parse(growTime, DateTimeFormatter.ofPattern("HH:mm"));
+        long delay = java.time.Duration.between(now, target).getSeconds();
+        if (delay < 0) delay += 24 * 60 * 60;
+        getLogger().info("[DEBUG] Scheduling grow in " + delay + " seconds");
         borderGrowTask = new BukkitRunnable() {
             @Override
             public void run() {
-                LocalTime now = LocalTime.now();
-                LocalTime target = LocalTime.parse(growTime, DateTimeFormatter.ofPattern("HH:mm"));
-                long delay = java.time.Duration.between(now, target).getSeconds();
-                if (delay < 0) delay += 24 * 60 * 60;
-                getLogger().info("[DEBUG] Scheduler run: now=" + now + ", target=" + target + ", delay=" + delay + "s");
-                Bukkit.getScheduler().runTaskLater(AutoBorderPlugin.this, () -> {
-                    DayOfWeek today = LocalDate.now().getDayOfWeek();
-                    getLogger().info("[DEBUG] runTaskLater triggered op: " + java.time.LocalDateTime.now() + ", day=" + today);
-                    if (growDays.isEmpty() || growDays.contains(today.toString())) {
-                        growBorder();
-                    }
-                }, delay * 20);
+                DayOfWeek today = LocalDate.now().getDayOfWeek();
+                getLogger().info("[DEBUG] runTaskLater triggered at: " + java.time.LocalDateTime.now() + ", day=" + today);
+                if (growDays.isEmpty() || growDays.contains(today.toString())) {
+                    growBorder();
+                } else {
+                    getLogger().info("[DEBUG] Today is not a grow day, skipping border growth.");
+                }
+                // Schedule next growth for the next day
+                scheduleBorderGrowth();
             }
-        }.runTaskTimer(this, 0, 20 * 60 * 60); // Check elk uur
+        }.runTaskLater(this, delay * 20);
     }
 
     private void growBorder() {
