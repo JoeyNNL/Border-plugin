@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.logging.Level;
@@ -124,8 +125,9 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
         LocalTime now = LocalTime.now();
         LocalTime target = LocalTime.parse(growTime, DateTimeFormatter.ofPattern("HH:mm"));
         long delay = java.time.Duration.between(now, target).getSeconds();
-        if (delay < 0) delay += 24 * 60 * 60;
-        getLogger().info("[DEBUG] Scheduling grow in " + delay + " seconds");
+        if (delay <= 0) delay += 24 * 60 * 60; // always schedule to the next future growTime
+        LocalDateTime nextGrow = LocalDateTime.now().plusSeconds(delay);
+        getLogger().info("[DEBUG] Scheduling grow at: " + nextGrow + " (in " + delay + " seconds)");
         borderGrowTask = new BukkitRunnable() {
             @Override
             public void run() {
@@ -136,7 +138,7 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
                 } else {
                     getLogger().info("[DEBUG] Today is not a grow day, skipping border growth.");
                 }
-                // Schedule next growth for the next day
+                // Always schedule the next growth for the next growTime (tomorrow or next valid day)
                 scheduleBorderGrowth();
             }
         }.runTaskLater(this, delay * 20);
