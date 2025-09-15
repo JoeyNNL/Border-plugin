@@ -2,13 +2,13 @@
 name: AutoBorder
 main: com.joeynnl.autoborder.AutoBorderPlugin
 version: 1.1
-description: Een plugin die de wereldborder automatisch vergroot.
+description: A automatic world border plugin for Minecraft servers.
 author: JoeyNNL
 api-version: 1.20
 softdepend: ["PlaceholderAPI"]
 commands:
   border:
-    description: Border beheer commando
+    description: AutoBorder management command
     usage: /border <reload|set|add|remove|center|info|help|bypass|log>
     permission: border.admin
-    permission-message: Je hebt geen toegang tot dit commando.
+    permission-message: You don't have permission to use this command.

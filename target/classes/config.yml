@@ -27,13 +27,13 @@ border:
   # Log border changes to a file (border.log)
   log_to_file: true
   # The chat message to broadcast (use %size% for the new border size)
-  broadcast_message: "<yellow>[</yellow><green>Border</green><yellow>]</yellow> <green>De wereldborder is vergroot naar <red>%size%</red> blokken!</green>"
+  broadcast_message: "<yellow>[</yellow><green>Border</green><yellow>]</yellow> <green>The world border has been increased to <red>%size%</red> blocks!</green>"
   # Show a title message to all players when the border grows
   broadcast_title_enabled: true
   # The main title text (use %size% for the new border size)
-  broadcast_title_main: "<green>Border vergroot!</green>"
+  broadcast_title_main: "<green>Border increased!</green>"
   # The subtitle text (use %size% for the new border size)
-  broadcast_title_sub: "<yellow>Nieuwe grootte:</yellow> <red>%size%</red> <yellow>blokken</yellow>"
+  broadcast_title_sub: "<yellow>New size:</yellow> <red>%size%</red> <yellow>blocks</yellow>"
   # Title fade-in time in ticks (20 ticks = 1 second)
   broadcast_title_fadein: 10
   # Title stay time in ticks

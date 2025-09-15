@@ -45,7 +45,7 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
         double cz = border.getCenter().getZ();
         if (x < cx - size || x > cx + size || z < cz - size || z > cz + size) {
             event.setTo(event.getFrom());
-            player.sendMessage("§cJe mag niet buiten de border!");
+                player.sendMessage("§cYou are not allowed outside the border!");
         }
     }
     private final Set<String> bypassPlayers = new HashSet<>();
@@ -125,7 +125,7 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
         LocalTime now = LocalTime.now();
         LocalTime target = LocalTime.parse(growTime, DateTimeFormatter.ofPattern("HH:mm"));
         long delay = java.time.Duration.between(now, target).getSeconds();
-        if (delay <= 0) delay += 24 * 60 * 60; // always schedule to the next future growTime
+        if (delay <= 0) delay += 24 * 60 * 60; 
         LocalDateTime nextGrow = LocalDateTime.now().plusSeconds(delay);
         getLogger().info("[DEBUG] Scheduling grow at: " + nextGrow + " (in " + delay + " seconds)");
         borderGrowTask = new BukkitRunnable() {
@@ -138,14 +138,13 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
                 } else {
                     getLogger().info("[DEBUG] Today is not a grow day, skipping border growth.");
                 }
-                // Always schedule the next growth for the next growTime (tomorrow or next valid day)
                 scheduleBorderGrowth();
             }
         }.runTaskLater(this, delay * 20);
     }
 
     private void growBorder() {
-        getLogger().info("[DEBUG] growBorder() aangeroepen op: " + java.time.LocalDateTime.now() + ", borderSize=" + borderSize + ", growAmount=" + growAmount);
+        getLogger().info("[DEBUG] growBorder() called at: " + java.time.LocalDateTime.now() + ", borderSize=" + borderSize + ", growAmount=" + growAmount);
         borderSize += growAmount;
         getConfig().set("border.size", borderSize);
         saveConfig();
@@ -180,20 +179,20 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
                     p.playSound(p.getLocation(), sound, soundVolume, soundPitch);
                 }
             } catch (IllegalArgumentException e) {
-                getLogger().warning("Ongeldige sound in config: " + soundName);
+                getLogger().warning("Invalid sound in config: " + soundName);
             }
         }
         if (logToFile) {
-            logToFile("Border vergroot naar " + borderSize + " blokken op " + LocalDate.now() + ".");
+            logToFile("Border increased to " + borderSize + " blocks on " + LocalDate.now() + ".");
         }
-        getLogger().info("Wereldborder vergroot naar " + borderSize + " blokken.");
+        getLogger().info("World border increased to " + borderSize + " blocks.");
     }
 
     private void logToFile(String message) {
         try (FileWriter fw = new FileWriter(getDataFolder() + "/border.log", true)) {
             fw.write("[" + java.time.LocalDateTime.now() + "] " + message + "\n");
         } catch (IOException e) {
-            getLogger().log(Level.WARNING, "Kon niet loggen naar border.log", e);
+                getLogger().log(Level.WARNING, "Could not log to border.log", e);
         }
     }
 
@@ -201,64 +200,64 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!command.getName().equalsIgnoreCase("border")) return false;
         if (args.length == 0) {
-            sender.sendMessage("§eGebruik /border help voor opties.");
+            sender.sendMessage("§eUse /border help for options.");
             return true;
         }
         if (args[0].equalsIgnoreCase("log")) {
             if (!sender.hasPermission("border.admin")) {
-                sender.sendMessage("§cGeen permissie.");
+                sender.sendMessage("§cNo permission.");
                 return true;
             }
             java.io.File logFile = new java.io.File(getDataFolder(), "border.log");
             if (!logFile.exists()) {
-                sender.sendMessage("§cGeen border.log bestand gevonden.");
+                sender.sendMessage("§cNo border.log file found.");
                 return true;
             }
             try {
                 java.util.List<String> lines = java.nio.file.Files.readAllLines(logFile.toPath());
                 int start = Math.max(0, lines.size() - 10);
-                sender.sendMessage("§eLaatste 10 regels van border.log:");
+                sender.sendMessage("§eLast 10 lines of border.log:");
                 for (int i = start; i < lines.size(); i++) {
                     sender.sendMessage("§7" + lines.get(i));
                 }
             } catch (Exception e) {
-                sender.sendMessage("§cFout bij lezen van border.log: " + e.getMessage());
+                sender.sendMessage("§cError reading border.log: " + e.getMessage());
             }
             return true;
         }
         if (args[0].equalsIgnoreCase("bypass")) {
             if (!sender.hasPermission("border.admin")) {
-                sender.sendMessage("§cGeen permissie.");
+                sender.sendMessage("§cNo permission.");
                 return true;
             }
             if (args.length == 1 && sender instanceof Player) {
                 Player p = (Player) sender;
                 if (bypassPlayers.contains(p.getName())) {
                     bypassPlayers.remove(p.getName());
-                    sender.sendMessage("§aJe kunt niet langer buiten de border.");
+                    sender.sendMessage("§aYou can no longer move outside the border.");
                 } else {
                     bypassPlayers.add(p.getName());
-                    sender.sendMessage("§aJe kunt nu buiten de border.");
+                    sender.sendMessage("§aYou can now move outside the border.");
                 }
                 return true;
             } else if (args.length == 2) {
                 String target = args[1];
                 if (bypassPlayers.contains(target)) {
                     bypassPlayers.remove(target);
-                    sender.sendMessage("§a" + target + " kan niet langer buiten de border.");
+                    sender.sendMessage("§a" + target + " can no longer move outside the border.");
                 } else {
                     bypassPlayers.add(target);
-                    sender.sendMessage("§a" + target + " kan nu buiten de border.");
+                    sender.sendMessage("§a" + target + " can now move outside the border.");
                 }
                 return true;
             } else {
-                sender.sendMessage("§cGebruik: /border bypass [speler]");
+                sender.sendMessage("§cUsage: /border bypass [player]");
                 return true;
             }
         }
         if (args[0].equalsIgnoreCase("reload")) {
             if (!sender.hasPermission("border.admin")) {
-                sender.sendMessage("§cGeen permissie.");
+                sender.sendMessage("§cNo permission.");
                 return true;
             }
             reloadConfig();
@@ -266,16 +265,16 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
             setWorldBorder();
             cancelBorderGrowTask();
             scheduleBorderGrowth();
-            sender.sendMessage("§aBorder config herladen!");
+            sender.sendMessage("§aBorder config reloaded!");
             return true;
         }
         if (args[0].equalsIgnoreCase("set")) {
             if (!sender.hasPermission("border.admin")) {
-                sender.sendMessage("§cGeen permissie.");
+                sender.sendMessage("§cNo permission.");
                 return true;
             }
             if (args.length < 2) {
-                sender.sendMessage("§cGebruik: /border set <grootte>");
+                sender.sendMessage("§cUsage: /border set <size>");
                 return true;
             }
             try {
@@ -284,20 +283,20 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
                 getConfig().set("border.size", borderSize);
                 saveConfig();
                 setWorldBorder();
-                sender.sendMessage("§aBorder grootte gezet op " + borderSize);
-                if (logToFile) logToFile(sender.getName() + " zette border op " + borderSize);
+                sender.sendMessage("§aBorder size set to " + borderSize);
+                if (logToFile) logToFile(sender.getName() + " set border to " + borderSize);
             } catch (NumberFormatException e) {
-                sender.sendMessage("§cGeen geldig getal.");
+                sender.sendMessage("§cNot a valid number.");
             }
             return true;
         }
         if (args[0].equalsIgnoreCase("add")) {
             if (!sender.hasPermission("border.admin")) {
-                sender.sendMessage("§cGeen permissie.");
+                sender.sendMessage("§cNo permission.");
                 return true;
             }
             if (args.length < 2) {
-                sender.sendMessage("§cGebruik: /border add <aantal>");
+                sender.sendMessage("§cUsage: /border add <amount>");
                 return true;
             }
             try {
@@ -306,20 +305,20 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
                 getConfig().set("border.size", borderSize);
                 saveConfig();
                 setWorldBorder();
-                sender.sendMessage("§aBorder vergroot met " + add + " naar " + borderSize);
-                if (logToFile) logToFile(sender.getName() + " vergrootte border met " + add);
+                sender.sendMessage("§aBorder increased by " + add + " to " + borderSize);
+                if (logToFile) logToFile(sender.getName() + " increased border by " + add);
             } catch (NumberFormatException e) {
-                sender.sendMessage("§cGeen geldig getal.");
+                sender.sendMessage("§cNot a valid number.");
             }
             return true;
         }
         if (args[0].equalsIgnoreCase("remove")) {
             if (!sender.hasPermission("border.admin")) {
-                sender.sendMessage("§cGeen permissie.");
+                sender.sendMessage("§cNo permission.");
                 return true;
             }
             if (args.length < 2) {
-                sender.sendMessage("§cGebruik: /border remove <aantal>");
+                sender.sendMessage("§cUsage: /border remove <amount>");
                 return true;
             }
             try {
@@ -328,16 +327,16 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
                 getConfig().set("border.size", borderSize);
                 saveConfig();
                 setWorldBorder();
-                sender.sendMessage("§aBorder verkleind met " + remove + " naar " + borderSize);
-                if (logToFile) logToFile(sender.getName() + " verkleinde border met " + remove);
+                sender.sendMessage("§aBorder decreased by " + remove + " to " + borderSize);
+                if (logToFile) logToFile(sender.getName() + " decreased border by " + remove);
             } catch (NumberFormatException e) {
-                sender.sendMessage("§cGeen geldig getal.");
+                sender.sendMessage("§cNot a valid number.");
             }
             return true;
         }
         if (args[0].equalsIgnoreCase("center")) {
             if (!sender.hasPermission("border.admin")) {
-                sender.sendMessage("§cGeen permissie.");
+                sender.sendMessage("§cNo permission.");
                 return true;
             }
             if (args.length == 3) {
@@ -348,10 +347,10 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
                     getConfig().set("border.center_z", centerZ);
                     saveConfig();
                     setWorldBorder();
-                    sender.sendMessage("§aBorder center gezet op " + centerX + ", " + centerZ);
-                    if (logToFile) logToFile(sender.getName() + " zette border center op " + centerX + ", " + centerZ);
+                    sender.sendMessage("§aBorder center set to " + centerX + ", " + centerZ);
+                    if (logToFile) logToFile(sender.getName() + " set border center to " + centerX + ", " + centerZ);
                 } catch (NumberFormatException e) {
-                    sender.sendMessage("§cGebruik: /border center <x> <z>");
+                    sender.sendMessage("§cUsage: /border center <x> <z>");
                 }
             } else if (args.length == 2 && args[1].equalsIgnoreCase("hier")) {
                 if (sender instanceof Player) {
@@ -362,40 +361,40 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
                     getConfig().set("border.center_z", centerZ);
                     saveConfig();
                     setWorldBorder();
-                    sender.sendMessage("§aBorder center gezet op jouw locatie: " + centerX + ", " + centerZ);
-                    if (logToFile) logToFile(sender.getName() + " zette border center op eigen locatie: " + centerX + ", " + centerZ);
+                    sender.sendMessage("§aBorder center set to your location: " + centerX + ", " + centerZ);
+                    if (logToFile) logToFile(sender.getName() + " set border center to own location: " + centerX + ", " + centerZ);
                 } else {
-                    sender.sendMessage("§cAlleen spelers kunnen dit gebruiken.");
+                    sender.sendMessage("§cOnly players can use this.");
                 }
             } else {
-                sender.sendMessage("§cGebruik: /border center <x> <z> of /border center hier");
+                sender.sendMessage("§cUsage: /border center <x> <z> or /border center hier");
             }
             return true;
         }
         if (args[0].equalsIgnoreCase("info")) {
             sender.sendMessage("§eBorder info:");
-            sender.sendMessage("§7Grootte: §f" + borderSize);
+            sender.sendMessage("§7Size: §f" + borderSize);
             sender.sendMessage("§7Center: §f" + centerX + ", " + centerZ);
-            sender.sendMessage("§7Volgende groei: §f" + growAmount + " om " + growTime);
-            sender.sendMessage("§7Animatie: §f" + (growAnimated ? (growAnimatedSeconds + "s") : "uit"));
-            sender.sendMessage("§7Broadcast: §f" + (broadcast ? "aan" : "uit"));
-            sender.sendMessage("§7Log naar bestand: §f" + (logToFile ? "aan" : "uit"));
+            sender.sendMessage("§7Next growth: §f" + growAmount + " at " + growTime);
+            sender.sendMessage("§7Animation: §f" + (growAnimated ? (growAnimatedSeconds + "s") : "off"));
+            sender.sendMessage("§7Broadcast: §f" + (broadcast ? "on" : "off"));
+            sender.sendMessage("§7Log to file: §f" + (logToFile ? "on" : "off"));
             return true;
         }
         if (args[0].equalsIgnoreCase("help")) {
-            sender.sendMessage("§eBorder commando's:");
-            sender.sendMessage("§7/border reload - herlaad config");
-            sender.sendMessage("§7/border set <grootte> - zet border grootte");
-            sender.sendMessage("§7/border add <aantal> - vergroot border");
-            sender.sendMessage("§7/border remove <aantal> - verklein border");
-            sender.sendMessage("§7/border center <x> <z> - zet center");
-            sender.sendMessage("§7/border center hier - zet center op jouw locatie");
-            sender.sendMessage("§7/border info - info over border");
-            sender.sendMessage("§7/border log - bekijk de laatste 10 regels van border.log");
-            sender.sendMessage("§7/border bypass [speler] - admin kan zichzelf of anderen buiten de border laten bewegen");
+            sender.sendMessage("§eBorder commands:");
+            sender.sendMessage("§7/border reload - reload config");
+            sender.sendMessage("§7/border set <size> - set border size");
+            sender.sendMessage("§7/border add <amount> - increase border");
+            sender.sendMessage("§7/border remove <amount> - decrease border");
+            sender.sendMessage("§7/border center <x> <z> - set center");
+            sender.sendMessage("§7/border center hier - set center to your location");
+            sender.sendMessage("§7/border info - info about border");
+            sender.sendMessage("§7/border log - view last 10 lines of border.log");
+            sender.sendMessage("§7/border bypass [player] - admin can allow self or others to move outside the border");
             return true;
         }
-        sender.sendMessage("§cOnbekend commando. Gebruik /border help.");
+        sender.sendMessage("§cUnknown command. Use /border help.");
         return true;
     }
 
@@ -437,7 +436,7 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
         int chunkMinZ = minZ >> 4;
         int chunkMaxZ = maxZ >> 4;
         int totalChunks = (chunkMaxX - chunkMinX + 1) * (chunkMaxZ - chunkMinZ + 1);
-        getLogger().info("Chunks te genereren: " + totalChunks);
+            getLogger().info("Chunks to generate: " + totalChunks);
         new BukkitRunnable() {
             int cx = chunkMinX;
             int cz = chunkMinZ;
@@ -455,18 +454,18 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
                     }
                     count++;
                 }
-                if (done % 100 == 0 || cx > chunkMaxX) {
-                    getLogger().info("Chunks gepregeneerd: " + done + "/" + totalChunks);
-                }
-                if (cx > chunkMaxX) {
-                    getLogger().info("Alle chunks binnen de border zijn gepregeneerd.");
-                    cancel();
-                }
+                    if (done % 100 == 0 || cx > chunkMaxX) {
+                        getLogger().info("Chunks pregenerated: " + done + "/" + totalChunks);
+                    }
+                    if (cx > chunkMaxX) {
+                        getLogger().info("All chunks within the border have been pregenerated.");
+                        cancel();
+                    }
             }
         }.runTaskTimer(this, 1L, 1L);
     }
 
-    // Tab completion voor /border commando
+    // Tab completion for /border command
     public java.util.List<String> onTabComplete(org.bukkit.command.CommandSender sender, org.bukkit.command.Command command, String alias, String[] args) {
         if (!command.getName().equalsIgnoreCase("border")) return java.util.Collections.emptyList();
         java.util.List<String> completions = new java.util.ArrayList<>();
