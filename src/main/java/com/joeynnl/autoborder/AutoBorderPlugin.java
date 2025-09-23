@@ -482,7 +482,7 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
                 } catch (NumberFormatException e) {
                     sender.sendMessage("§cUsage: /border center <x> <z>");
                 }
-            } else if (args.length == 2 && args[1].equalsIgnoreCase("hier")) {
+            } else if (args.length == 2 && args[1].equalsIgnoreCase("here")) {
                 if (sender instanceof Player) {
                     Player p = (Player) sender;
                     centerX = p.getLocation().getBlockX();
@@ -497,7 +497,7 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
                     sender.sendMessage("§cOnly players can use this.");
                 }
             } else {
-                sender.sendMessage("§cUsage: /border center <x> <z> or /border center hier");
+                sender.sendMessage("§cUsage: /border center <x> <z> or /border center here");
             }
             return true;
         }
@@ -518,7 +518,7 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
             sender.sendMessage("§7/border add <amount> - increase border");
             sender.sendMessage("§7/border remove <amount> - decrease border");
             sender.sendMessage("§7/border center <x> <z> - set center");
-            sender.sendMessage("§7/border center hier - set center to your location");
+            sender.sendMessage("§7/border center here - set center to your location");
             sender.sendMessage("§7/border info - info about border");
             sender.sendMessage("§7/border log - view last 10 lines of border.log");
             sender.sendMessage("§7/border bypass [player] - admin can allow self or others to move outside the border");
@@ -612,7 +612,7 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
                 if (p.getName().toLowerCase().startsWith(args[1].toLowerCase())) completions.add(p.getName());
             }
         } else if (args.length >= 2 && args[0].equalsIgnoreCase("center")) {
-            if (args.length == 2) completions.add("hier");
+            if (args.length == 2) completions.add("here");
         }
         return completions;
     }
