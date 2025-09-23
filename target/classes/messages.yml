@@ -1,0 +1,12 @@
+messages:
+  prefix: "&e&l[&aBorder&e]&r "
+  grow:
+    chat: "&aThe world border has been increased to &c%size% &ablocks!"
+    title_main: "&aBorder increased!"
+    title_sub: "&eNew size: &c%size% &eblocks"
+  shrink:
+    chat: "&cThe world border has been decreased to &e%size% &cblocks!"
+    title_main: "&cBorder decreased!"
+    title_sub: "&eNew size: &c%size% &eblocks"
+  general:
+    not_allowed_outside: "&cYou are not allowed outside the border!"

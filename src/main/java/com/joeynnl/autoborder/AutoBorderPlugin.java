@@ -3,6 +3,7 @@ package com.joeynnl.autoborder;
 import org.bukkit.Bukkit;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.title.Title;
 import java.time.Duration;
 import org.bukkit.World;
@@ -10,6 +11,7 @@ import org.bukkit.WorldBorder;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import java.util.HashSet;
 import java.util.Set;
@@ -19,6 +21,7 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.DayOfWeek;
@@ -28,8 +31,11 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.regex.Pattern;
 
 public class AutoBorderPlugin extends JavaPlugin implements Listener {
+    private static final Pattern AMPERSAND_COLOR_PATTERN = Pattern.compile("(&[0-9a-fk-orA-FK-OR])|(&#[0-9a-fA-F]{6})");
     public int getBorderSize() {
         return borderSize;
     }
@@ -45,7 +51,9 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
         double cz = border.getCenter().getZ();
         if (x < cx - size || x > cx + size || z < cz - size || z > cz + size) {
             event.setTo(event.getFrom());
-                player.sendMessage("§cYou are not allowed outside the border!");
+            // Send MiniMessage-based warning from messages.yml (with optional prefix)
+            String mm = msgPrefix + msgNotAllowedOutside;
+            player.sendMessage(parse(mm));
         }
     }
     private final Set<String> bypassPlayers = new HashSet<>();
@@ -61,10 +69,7 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
     private int growAnimatedSeconds;
     private boolean broadcast;
     private boolean logToFile;
-    private String broadcastMessage;
     private boolean broadcastTitleEnabled;
-    private String broadcastTitleMain;
-    private String broadcastTitleSub;
     private int broadcastTitleFadeIn;
     private int broadcastTitleStay;
     private int broadcastTitleFadeOut;
@@ -73,6 +78,28 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
     private float soundVolume;
     private float soundPitch;
     private BukkitTask borderGrowTask;
+    // Shrink settings
+    private double shrinkChancePercent;
+    private int shrinkAmount;
+    private boolean shrinkBroadcast;
+    private boolean shrinkSoundEnabled;
+    private String shrinkSoundName;
+    private float shrinkSoundVolume;
+    private float shrinkSoundPitch;
+    // Limits
+    private int minBorderSize;
+
+    // Messages.yml handling
+    private File messagesFile;
+    private FileConfiguration messagesCfg;
+    private String msgPrefix;
+    private String msgGrowChat;
+    private String msgGrowTitleMain;
+    private String msgGrowTitleSub;
+    private String msgShrinkChat;
+    private String msgShrinkTitleMain;
+    private String msgShrinkTitleSub;
+    private String msgNotAllowedOutside;
 
     private void reloadSettings() {
         FileConfiguration config = getConfig();
@@ -84,14 +111,11 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
         growDays = config.getStringList("border.grow_days");
         growAnimated = config.getBoolean("border.grow_animated", true);
         growAnimatedSeconds = config.getInt("border.grow_animated_seconds", 10);
-        broadcast = config.getBoolean("border.broadcast", true);
-        logToFile = config.getBoolean("border.log_to_file", true);
-        broadcastMessage = config.getString("border.broadcast_message", "§aDe wereldborder is vergroot naar %size% blokken!");
+    broadcast = config.getBoolean("border.broadcast", true);
+    logToFile = config.getBoolean("border.log_to_file", true);
         pregenChunks = config.getBoolean("pregen_chunks", false);
         pregenChunksPerTick = config.getInt("pregen_chunks_per_tick", 10);
         broadcastTitleEnabled = config.getBoolean("border.broadcast_title_enabled", false);
-        broadcastTitleMain = config.getString("border.broadcast_title_main", "§aBorder vergroot!");
-        broadcastTitleSub = config.getString("border.broadcast_title_sub", "Nieuwe grootte: %size% blokken");
         broadcastTitleFadeIn = config.getInt("border.broadcast_title_fadein", 10);
         broadcastTitleStay = config.getInt("border.broadcast_title_stay", 60);
         broadcastTitleFadeOut = config.getInt("border.broadcast_title_fadeout", 10);
@@ -99,6 +123,45 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
         soundName = config.getString("border.sound", "ENTITY_PLAYER_LEVELUP");
         soundVolume = (float) config.getDouble("border.sound_volume", 1.0);
         soundPitch = (float) config.getDouble("border.sound_pitch", 1.0);
+        // Shrink
+        shrinkChancePercent = config.getDouble("border.shrink_chance_percent", 0.0);
+        shrinkAmount = config.getInt("border.shrink_amount", 0);
+        shrinkBroadcast = config.getBoolean("border.shrink_broadcast", true);
+        shrinkSoundEnabled = config.getBoolean("border.shrink_sound_enabled", false);
+        shrinkSoundName = config.getString("border.shrink_sound", "ENTITY_ENDERMAN_TELEPORT");
+        shrinkSoundVolume = (float) config.getDouble("border.shrink_sound_volume", 1.0);
+        shrinkSoundPitch = (float) config.getDouble("border.shrink_sound_pitch", 1.0);
+        // Limits
+        minBorderSize = config.getInt("border.min_size", 16);
+    }
+
+    private void loadMessages() {
+        // Ensure default file exists
+        if (messagesFile == null) {
+            messagesFile = new File(getDataFolder(), "messages.yml");
+        }
+        if (!messagesFile.exists()) {
+            try { saveResource("messages.yml", false); } catch (IllegalArgumentException ignored) { }
+        }
+        messagesCfg = YamlConfiguration.loadConfiguration(messagesFile);
+        // Defaults
+        msgPrefix = messagesCfg.getString("messages.prefix", "<yellow>[</yellow><green>Border</green><yellow>]</yellow> ");
+        msgGrowChat = messagesCfg.getString("messages.grow.chat", "<green>The world border has been increased to <red>%size%</red> blocks!</green>");
+        msgGrowTitleMain = messagesCfg.getString("messages.grow.title_main", "<green>Border increased!</green>");
+        msgGrowTitleSub = messagesCfg.getString("messages.grow.title_sub", "<yellow>New size:</yellow> <red>%size%</red> <yellow>blocks</yellow>");
+        msgShrinkChat = messagesCfg.getString("messages.shrink.chat", "<red>The world border has been decreased to <yellow>%size%</yellow> blocks!</red>");
+        msgShrinkTitleMain = messagesCfg.getString("messages.shrink.title_main", "<red>Border decreased!</red>");
+        msgShrinkTitleSub = messagesCfg.getString("messages.shrink.title_sub", "<yellow>New size:</yellow> <red>%size%</red> <yellow>blocks</yellow>");
+        msgNotAllowedOutside = messagesCfg.getString("messages.general.not_allowed_outside", "<red>You are not allowed outside the border!</red>");
+    }
+
+    private Component parse(String text) {
+        if (text == null) return Component.empty();
+        // Auto-detect ampersand/section color codes; otherwise treat as MiniMessage
+        if (text.indexOf('§') >= 0 || AMPERSAND_COLOR_PATTERN.matcher(text).find()) {
+            return LegacyComponentSerializer.legacyAmpersand().deserialize(text);
+        }
+        return MiniMessage.miniMessage().deserialize(text);
     }
 
     private void setWorldBorder() {
@@ -134,7 +197,14 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
                 DayOfWeek today = LocalDate.now().getDayOfWeek();
                 getLogger().info("[DEBUG] runTaskLater triggered at: " + java.time.LocalDateTime.now() + ", day=" + today);
                 if (growDays.isEmpty() || growDays.contains(today.toString())) {
-                    growBorder();
+                    // Decide shrink vs grow based on configured chance
+                    double roll = ThreadLocalRandom.current().nextDouble(0.0, 100.0);
+                    getLogger().info("[DEBUG] Daily roll=" + roll + ", shrinkChancePercent=" + shrinkChancePercent);
+                    if (shrinkAmount > 0 && roll < shrinkChancePercent) {
+                        shrinkBorder();
+                    } else {
+                        growBorder();
+                    }
                 } else {
                     getLogger().info("[DEBUG] Today is not a grow day, skipping border growth.");
                 }
@@ -150,15 +220,15 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
         saveConfig();
         setWorldBorder();
         if (broadcast) {
-            String msg = broadcastMessage.replace("%size%", String.valueOf(borderSize));
-            Component comp = MiniMessage.miniMessage().deserialize(msg);
+            String msg = (msgPrefix + msgGrowChat).replace("%size%", String.valueOf(borderSize));
+            Component comp = parse(msg);
             Bukkit.getServer().sendMessage(comp);
         }
         if (broadcastTitleEnabled) {
-            String main = broadcastTitleMain.replace("%size%", String.valueOf(borderSize));
-            String sub = broadcastTitleSub.replace("%size%", String.valueOf(borderSize));
-            Component mainComp = MiniMessage.miniMessage().deserialize(main);
-            Component subComp = MiniMessage.miniMessage().deserialize(sub);
+            String main = msgGrowTitleMain.replace("%size%", String.valueOf(borderSize));
+            String sub = msgGrowTitleSub.replace("%size%", String.valueOf(borderSize));
+            Component mainComp = parse(main);
+            Component subComp = parse(sub);
             Title title = Title.title(
                 mainComp,
                 subComp,
@@ -186,6 +256,57 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
             logToFile("Border increased to " + borderSize + " blocks on " + LocalDate.now() + ".");
         }
         getLogger().info("World border increased to " + borderSize + " blocks.");
+    }
+
+    private void shrinkBorder() {
+        getLogger().info("[DEBUG] shrinkBorder() called at: " + java.time.LocalDateTime.now() + ", borderSize=" + borderSize + ", shrinkAmount=" + shrinkAmount);
+        int newSize = borderSize - shrinkAmount;
+        // Clamp to configured minimum size
+        if (newSize < minBorderSize) {
+            getLogger().warning("Shrink would reduce border below min_size (" + minBorderSize + "); clamping to min_size.");
+            newSize = minBorderSize;
+        }
+        borderSize = newSize;
+        getConfig().set("border.size", borderSize);
+        saveConfig();
+        setWorldBorder();
+        if (shrinkBroadcast) {
+            String msg = (msgPrefix + msgShrinkChat).replace("%size%", String.valueOf(borderSize));
+            Component comp = parse(msg);
+            Bukkit.getServer().sendMessage(comp);
+        }
+        if (broadcastTitleEnabled) {
+            String main = msgShrinkTitleMain.replace("%size%", String.valueOf(borderSize));
+            String sub = msgShrinkTitleSub.replace("%size%", String.valueOf(borderSize));
+            Component mainComp = parse(main);
+            Component subComp = parse(sub);
+            Title title = Title.title(
+                mainComp,
+                subComp,
+                Title.Times.times(
+                    Duration.ofMillis(broadcastTitleFadeIn * 50L),
+                    Duration.ofMillis(broadcastTitleStay * 50L),
+                    Duration.ofMillis(broadcastTitleFadeOut * 50L)
+                )
+            );
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                p.showTitle(title);
+            }
+        }
+        if (shrinkSoundEnabled) {
+            try {
+                org.bukkit.Sound sound = org.bukkit.Sound.valueOf(shrinkSoundName);
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    p.playSound(p.getLocation(), sound, shrinkSoundVolume, shrinkSoundPitch);
+                }
+            } catch (IllegalArgumentException e) {
+                getLogger().warning("Invalid shrink sound in config: " + shrinkSoundName);
+            }
+        }
+        if (logToFile) {
+            logToFile("Border decreased to " + borderSize + " blocks on " + LocalDate.now() + ".");
+        }
+        getLogger().info("World border decreased to " + borderSize + " blocks.");
     }
 
     private void logToFile(String message) {
@@ -262,6 +383,7 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
             }
             reloadConfig();
             reloadSettings();
+            loadMessages();
             setWorldBorder();
             cancelBorderGrowTask();
             scheduleBorderGrowth();
@@ -279,6 +401,10 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
             }
             try {
                 int newSize = Integer.parseInt(args[1]);
+                if (newSize < minBorderSize) {
+                    newSize = minBorderSize;
+                    sender.sendMessage("§eValue was below min_size; clamped to " + minBorderSize + ".");
+                }
                 borderSize = newSize;
                 getConfig().set("border.size", borderSize);
                 saveConfig();
@@ -324,6 +450,10 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
             try {
                 int remove = Integer.parseInt(args[1]);
                 borderSize -= remove;
+                if (borderSize < minBorderSize) {
+                    borderSize = minBorderSize;
+                    sender.sendMessage("§eResult was below min_size; clamped to " + minBorderSize + ".");
+                }
                 getConfig().set("border.size", borderSize);
                 saveConfig();
                 setWorldBorder();
@@ -401,7 +531,10 @@ public class AutoBorderPlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        // Export messages.yml to the plugin data folder (for future message customization)
+        try { saveResource("messages.yml", false); } catch (IllegalArgumentException ignored) { }
         reloadSettings();
+        loadMessages();
         setWorldBorder();
         cancelBorderGrowTask();
         scheduleBorderGrowth();

@@ -26,14 +26,8 @@ border:
   broadcast: true
   # Log border changes to a file (border.log)
   log_to_file: true
-  # The chat message to broadcast (use %size% for the new border size)
-  broadcast_message: "<yellow>[</yellow><green>Border</green><yellow>]</yellow> <green>The world border has been increased to <red>%size%</red> blocks!</green>"
   # Show a title message to all players when the border grows
   broadcast_title_enabled: true
-  # The main title text (use %size% for the new border size)
-  broadcast_title_main: "<green>Border increased!</green>"
-  # The subtitle text (use %size% for the new border size)
-  broadcast_title_sub: "<yellow>New size:</yellow> <red>%size%</red> <yellow>blocks</yellow>"
   # Title fade-in time in ticks (20 ticks = 1 second)
   broadcast_title_fadein: 10
   # Title stay time in ticks
@@ -48,3 +42,21 @@ border:
   sound_volume: 1.0
   # Sound pitch (1.0 = normal)
   sound_pitch: 1.0
+  # --- Shrink settings ---
+  # Percentage chance (0-100) that the border will shrink instead of grow on a scheduled day
+  shrink_chance_percent: 20
+  # How many blocks the border shrinks when the chance triggers
+  shrink_amount: 100
+  # Send a chat message when the border shrinks
+  shrink_broadcast: true
+  # Play a sound to all players when the border shrinks
+  shrink_sound_enabled: true
+  # The Minecraft sound to play for shrinking
+  shrink_sound: "ENTITY_ENDERMAN_TELEPORT"
+  # Sound volume (1.0 = normal) for shrinking
+  shrink_sound_volume: 1.0
+  # Sound pitch (1.0 = normal) for shrinking
+  shrink_sound_pitch: 1.0
+  # --- Limits ---
+  # The minimum border size in blocks; the border will never go below this value
+  min_size: 16
